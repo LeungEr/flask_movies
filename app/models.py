@@ -23,6 +23,8 @@ class User(db.Model):
     addtime = db.Column(db.DateTime, index=True, default=datetime.utcnow)  # 注册时间
     uuid = db.Column(db.String(255), unique=True)  # 唯一标识符
     userlogs = db.relationship('Userlog', backref='user')  # 会员日志外键关系关联
+    comment = db.relationship('Comment', backref='user')  # 评论外键关系关联
+
 
     def __repr__(self):
         return "<User {}>".format(self.name)
@@ -68,6 +70,8 @@ class Movie(db.Model):
     release_time = db.Column(db.Date)  # 上映时间
     length = db.Column(db.String(100))  # 播放时间
     addtime = db.Column(db.DateTime, index=True, default=datetime.utcnow)  # 添加时间
+    comments = db.relationship("Comment", backref='movie')  # 评论外键关系关联
+
 
     def __repr__(self):
         return "<Movie {}>".format(self.title)
@@ -83,3 +87,16 @@ class Previews(db.Model):
 
     def __repr__(self):
         return "<Previews {}>".format(self.title)
+
+
+# 评论
+class Comment(db.Model):
+    __tablename__ = "Comment"
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text)  # 评论内容
+    movie_id = db.Column(db.Integer, db.ForeignKey('movie.id'))  # 所属电影
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # 所属用户
+    addtime = db.Column(db.DateTime, index=True, default=datetime.utcnow)  # 添加时间
+
+    def __repr__(self):
+        return "<Comment {}>".format(self.id)
