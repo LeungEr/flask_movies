@@ -79,7 +79,7 @@ class Movie(db.Model):
 
 # 上映预告
 class Previews(db.Model):
-    __tablename__ = "Previews"
+    __tablename__ = "previews"
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), unique=True)
     logo = db.Column(db.String(255), unique=True)  # 封面
@@ -91,7 +91,7 @@ class Previews(db.Model):
 
 # 评论
 class Comment(db.Model):
-    __tablename__ = "Comment"
+    __tablename__ = "comment"
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text)  # 评论内容
     movie_id = db.Column(db.Integer, db.ForeignKey('movie.id'))  # 所属电影
@@ -104,7 +104,7 @@ class Comment(db.Model):
 
 # 电影收藏
 class Moviecol(db.Model):
-    __tablename__ = "Moviecol"
+    __tablename__ = "moviecol"
     id = db.Column(db.Integer, primary_key=True)
     movie_id = db.Column(db.Integer, db.ForeignKey('movie.id'))  # 所属电影
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # 所属用户
@@ -116,7 +116,7 @@ class Moviecol(db.Model):
 
 # 权限
 class Auth(db.Model):
-    __tablename__ = "Auth"
+    __tablename__ = "auth"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True)  # 权限名称
     url = db.Column(db.String(255), unique=True)  # 地址
@@ -128,11 +128,53 @@ class Auth(db.Model):
 
 # 角色
 class Role(db.Model):
-    __tablename__ = "Role"
+    __tablename__ = "role"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True)  # 角色名称
     auths = db.Column(db.String(600))
     addtime = db.Column(db.DateTime, index=True, default=datetime.utcnow)  # 添加时间
+    admins = db.relationship("Admin", backref='role')  # 管理员外键关系关联
 
     def __repr__(self):
         return "<Role {}>".format(self.name)
+
+
+# 管理员
+class Admin(db.Model):
+    __tablename__ = 'admin'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True)
+    pwd = db.Column(db.String(100))
+    is_super = db.Column(db.SmallInteger)  # 是否为超级管理员，0为超级管理员
+    role_id = db.Column(db.Integer, db.ForeignKey('role.id'))  # 所属角色
+    addtime = db.Column(db.DateTime, index=True, default=datetime.utcnow)  # 添加时间
+    adminlogs = db.relationship("Adminlog", backref='admin')  # 管理员登录外键关系关联
+    oplogs = db.relationship("Oplog", backref='admin')  # 管理员操作日志外键关系关联
+
+    def __repr__(self):
+        return "<Admin {}>".format(self.name)
+
+
+# 管理员登录日志
+class Adminlog(db.Model):
+    __tablename__ = "adminlog"
+    id = db.Column(db.Integer, primary_key=True)
+    admin_id = db.Column(db.Integer, db.ForeignKey('admin.id'))  # 所属管理员
+    ip = db.Column(db.String(100))
+    addtime = db.Column(db.DateTime, index=True, default=datetime.utcnow)  # 登录时间
+
+    def __repr__(self):
+        return "<Adminlog {}>".format(self.id)
+
+
+# 操作日志
+class Oplog(db.Model):
+    __tablename__ = "adminlog"
+    id = db.Column(db.Integer, primary_key=True)
+    admin_id = db.Column(db.Integer, db.ForeignKey('admin.id'))  # 所属管理员
+    ip = db.Column(db.String(100))
+    reason = db.Column(db.String(600))  # 操作原因
+    addtime = db.Column(db.DateTime, index=True, default=datetime.utcnow)  # 登录时间
+
+    def __repr__(self):
+        return "<Oplog {}>".format(self.id)
