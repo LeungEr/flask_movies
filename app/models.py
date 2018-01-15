@@ -20,19 +20,54 @@ class User(db.Model):
     phone = db.Column(db.String(11), unique=True)
     info = db.Column(db.Text)  # 个性简介
     face = db.Column(db.String(255), unique=True)
-    addtime = db.Column(db.DateTime, index=True, default=datetime.utcnow())  # 注册时间
+    addtime = db.Column(db.DateTime, index=True, default=datetime.utcnow)  # 注册时间
     uuid = db.Column(db.String(255), unique=True)  # 唯一标识符
-    userlogs = db.relationship('Userlog', backref='user') # 会员日志外键关系关联
+    userlogs = db.relationship('Userlog', backref='user')  # 会员日志外键关系关联
+
     def __repr__(self):
-        return "<User {}>" .format(self.name)
+        return "<User {}>".format(self.name)
+
 
 # 登录日志
 class Userlog(db.Modle):
-    __tablename__ =  "userlog"
+    __tablename__ = "userlog"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))   #所属会员
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))  # 所属会员
     ip = db.Column(db.String(100))
-    addtime = db.Column(db.DateTime, index=True, default=datetime.utcnow())  # 登录时间
+    addtime = db.Column(db.DateTime, index=True, default=datetime.utcnow)  # 登录时间
 
     def __repr__(self):
-        return "<Userlog {}>" .format(self.id)
+        return "<Userlog {}>".format(self.id)
+
+
+# 标签
+class Tag(db.Model):
+    __tablename__ = "tag"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True)  # 标题
+    addtime = db.Column(db.DateTime, index=True, default=datetime.utcnow)  # 添加时间
+    movies = db.relationship("Movie", backref='tag')  # 电影外键关系关联
+
+    def __repr__(self):
+        return "<Tag {}>".format(self.name)
+
+
+# 电影
+class Movie(db.Model):
+    __tablename__ = "movie"
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255), unique=True)
+    url = db.Column(db.String(255), unique=True)  # 地址
+    info = db.Column(db.Text)  # 简介
+    logo = db.Column(db.String(255), unique=True)  # 封面
+    star = db.Column(db.SmallInteger)  # 星级
+    playnum = db.Column(db.BigInteger)  # 播放次数
+    commentnum = db.Column(db.BigInteger)  # 评论量
+    tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'))  # 所属标签
+    area = db.Column(db.String(255))  # 上映地区
+    release_time = db.Column(db.Date)  # 上映时间
+    length = db.Column(db.String(100))  # 播放时间
+    addtime = db.Column(db.DateTime, index=True, default=datetime.utcnow)  # 添加时间
+
+    def __repr__(self):
+        return "<Movie {}>".format(self.title)
