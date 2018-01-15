@@ -71,3 +71,15 @@ class Movie(db.Model):
 
     def __repr__(self):
         return "<Movie {}>".format(self.title)
+
+
+# 上映预告
+class Previews(db.Model):
+    __tablename__ = "Previews"
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255), unique=True)
+    logo = db.Column(db.String(255), unique=True)  # 封面
+    addtime = db.Column(db.DateTime, index=True, default=datetime.utcnow)  # 添加时间
+
+    def __repr__(self):
+        return "<Previews {}>".format(self.title)
