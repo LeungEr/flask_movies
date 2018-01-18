@@ -8,7 +8,7 @@ from flask import (
 
 @admin.route("/")
 def index():
-    return "<h1 style='color:red'>this is home</h1>"
+    return render_template("admin/index.html")
 
 
 @admin.route("/login/")
