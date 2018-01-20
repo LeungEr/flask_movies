@@ -79,3 +79,8 @@ def moviecol_list():
 @admin.route("/oplog/list")
 def oplog_list():
     return render_template("admin/oplog_list.html")
+
+
+@admin.route("/adminloginlog/list")
+def adminloginlog_list():
+    return render_template("admin/adminloginlog_list.html")
