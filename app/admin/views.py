@@ -69,3 +69,8 @@ def user_view():
 @admin.route("/comment/list")
 def comment_list():
     return render_template("admin/comment_list.html")
+
+
+@admin.route("/moviecol/list")
+def moviecol_list():
+    return render_template("admin/moviecol_list.html")
