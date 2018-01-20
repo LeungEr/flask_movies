@@ -64,3 +64,8 @@ def user_list():
 @admin.route("/user/view")
 def user_view():
     return render_template("admin/user_view.html")
+
+
+@admin.route("/comment/list")
+def comment_list():
+    return render_template("admin/comment_list.html")
