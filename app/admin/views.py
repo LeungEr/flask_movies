@@ -84,3 +84,8 @@ def oplog_list():
 @admin.route("/adminloginlog/list")
 def adminloginlog_list():
     return render_template("admin/adminloginlog_list.html")
+
+
+@admin.route("/userloginlog/list")
+def userloginlog_list():
+    return render_template("admin/userloginlog_list.html")
