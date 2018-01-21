@@ -110,3 +110,12 @@ def auth_add():
 def auth_list():
     return render_template("admin/auth_list.html")
 
+
+@admin.route("/admin/add")
+def admin_add():
+    return render_template("admin/admin_add.html")
+
+
+@admin.route("/admin/list")
+def admin_list():
+    return render_template("admin/admin_list.html")
