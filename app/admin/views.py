@@ -7,12 +7,19 @@ from flask import (
     session,
     request,
 )
-from app.admin.forms import LoginForm
-from app.models import Admin
+from app.admin.forms import (
+    LoginForm,
+    TagForm,
+)
+from app.models import (
+    Admin,
+    Tag,
+)
 from functools import wraps
+from app import db
 
 
-# 装饰器，管理员登录身份验证
+# 访问控制
 def admin_login_req(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -56,12 +63,28 @@ def pwd():
     return render_template("admin/pwd.html")
 
 
-@admin.route("/tag/add")
+# 添加标签
+@admin.route("/tag/add", methods=["GET", "POST"])
 @admin_login_req
 def tag_add():
-    return render_template("admin/tag_add.html")
+    form = TagForm()
+    if form.validate_on_submit():
+        data = form.data
+        tag = Tag.query.filter_by(name=data["name"]).count()
+        if tag == 1:
+            flash("名称已经存在!", "err")
+            return redirect(url_for('admin.tag_add'))
+        tag = Tag(
+            name=data["name"]
+        )
+        db.session.add(tag)
+        db.session.commit()
+        flash("添加标签成功!", "ok")
+        redirect(url_for('admin.tag_add'))
+    return render_template("admin/tag_add.html", form=form)
 
 
+# 标签列表
 @admin.route("/tag/list")
 @admin_login_req
 def tag_list():
