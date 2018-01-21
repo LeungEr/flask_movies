@@ -89,3 +89,15 @@ def adminloginlog_list():
 @admin.route("/userloginlog/list")
 def userloginlog_list():
     return render_template("admin/userloginlog_list.html")
+
+
+@admin.route("/role/add")
+def role_add():
+    return render_template("admin/role_add.html")
+
+
+@admin.route("/role/list")
+def role_list():
+    return render_template("admin/role_list.html")
+
+
