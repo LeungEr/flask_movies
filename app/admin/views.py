@@ -11,11 +11,13 @@ from app.admin.forms import (
     LoginForm,
     TagForm,
     MovieForm,
+    PreviewForm,
 )
 from app.models import (
     Admin,
     Tag,
     Movie,
+    Preview,
 )
 from functools import wraps
 from app import (
@@ -256,16 +258,41 @@ def movie_del(id=None):
     return redirect(url_for('admin.movie_list', page=1))
 
 
-@admin.route("/preview/add")
+@admin.route("/preview/add", methods=["GET", "POST"])
 @admin_login_req
 def preview_add():
-    return render_template("admin/preview_add.html")
+    form = PreviewForm()
+    if form.validate_on_submit():
+        data = form.data
+        file_logo = secure_filename(form.logo.data.filename)
+        if not os.path.exists(app.config["UP_DIR"]):
+            # 如果没有 "UP_DIR" 目录,就新建一个
+            os.makedirs(app.config["UP_DIR"])
+            # 授权文件夹可读写
+            os.chmod(app.config["UP_DIR"], "rw")
+        logo = change_filename(file_logo)
+        # 保存
+        form.logo.data.save(app.config["UP_DIR"] + logo)
+        preview = Preview(
+            title=data["title"],
+            logo=logo
+        )
+        db.session.add(preview)
+        db.session.commit()
+        flash("修改预告成功!", "ok")
+        return redirect(url_for('admin.preview_add'))
+    return render_template("admin/preview_add.html", form=form)
 
 
-@admin.route("/preview/list")
+@admin.route("/preview/list/<int:page>", methods=["GET"])
 @admin_login_req
-def preview_list():
-    return render_template("admin/preview_list.html")
+def preview_list(page=None):
+    if page is None:
+        page = 1
+    page_data = Preview.query.order_by(
+        Preview.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/preview_list.html", page_data=page_data)
 
 
 @admin.route("/user/list")
