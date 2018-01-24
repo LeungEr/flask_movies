@@ -20,6 +20,7 @@ from app.models import (
     Preview,
     User,
     Comment,
+    Moviecol,
 )
 from functools import wraps
 from app import (
@@ -393,10 +394,34 @@ def comment_del(id=None):
     return redirect(url_for('admin.comment_list', page=1))
 
 
-@admin.route("/moviecol/list")
+# 收藏列表
+@admin.route("/moviecol/list/<int:page>/", methods=["GET"])
 @admin_login_req
-def moviecol_list():
-    return render_template("admin/moviecol_list.html")
+def moviecol_list(page=None):
+    if page is None:
+        page = 1
+    page_data = Moviecol.query.join(
+        Movie
+    ).join(
+        User
+    ).filter(
+        Movie.id == Moviecol.movie_id,
+        User.id == Moviecol.user_id
+    ).order_by(
+        Moviecol.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/moviecol_list.html", page_data=page_data)
+
+
+# 删除收藏
+@admin.route("/moviecol/del/<int:id>/", methods=["GET"])
+@admin_login_req
+def moviecol_del(id=None):
+    moviecol = Moviecol.query.get_or_404(int(id))
+    db.session.delete(moviecol)
+    db.session.commit()
+    flash("删除收藏成功!", "ok")
+    return redirect(url_for('admin.moviecol_list', page=1))
 
 
 @admin.route("/oplog/list")
