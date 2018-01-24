@@ -258,6 +258,7 @@ def movie_del(id=None):
     return redirect(url_for('admin.movie_list', page=1))
 
 
+# 添加预告
 @admin.route("/preview/add", methods=["GET", "POST"])
 @admin_login_req
 def preview_add():
@@ -284,6 +285,7 @@ def preview_add():
     return render_template("admin/preview_add.html", form=form)
 
 
+# 预告列表
 @admin.route("/preview/list/<int:page>", methods=["GET"])
 @admin_login_req
 def preview_list(page=None):
@@ -293,6 +295,40 @@ def preview_list(page=None):
         Preview.addtime.desc()
     ).paginate(page=page, per_page=10)
     return render_template("admin/preview_list.html", page_data=page_data)
+
+
+# 编辑预告
+@admin.route("/preview/edit/<int:id>", methods=["GET", "POST"])
+@admin_login_req
+def preview_edit(id=None):
+    form = PreviewForm()
+    form.logo.validators = []
+    preview = Preview.query.get_or_404(int(id))
+    if request.method == "GET":
+        form.title.data = preview.title
+    if form.validate_on_submit():
+        data = form.data
+        if form.logo.data != "":
+            file_logo = secure_filename(form.logo.data.filename)
+            preview.logo = change_filename(file_logo)
+            form.logo.data.save(app.config["UP_DIR"] + preview.logo)
+        preview.title = data["title"]
+        db.session.add(preview)
+        db.session.commit()
+        flash("修改预告成功!", "ok")
+        return redirect(url_for('admin.preview_edit', id=id))
+    return render_template("admin/preview_edit.html", form=form,preview=preview)
+
+
+# 删除预告
+@admin.route("/preview/del/<int:id>/", methods=["GET"])
+@admin_login_req
+def preview_del(id=None):
+    preview = Preview.query.get_or_404(int(id))
+    db.session.delete(preview)
+    db.session.commit()
+    flash("删除预告成功!", "ok")
+    return redirect(url_for('admin.preview_list', page=1))
 
 
 @admin.route("/user/list")
