@@ -22,6 +22,9 @@ from app.models import (
     User,
     Comment,
     Moviecol,
+    Oplog,
+    Adminlog,
+    Userlog,
 )
 from functools import wraps
 from app import (
@@ -32,6 +35,15 @@ from werkzeug.utils import secure_filename
 import os
 import uuid
 import datetime
+
+
+# 上下应用处理器
+@admin.context_processor
+def tpl_extra():
+    data = dict(
+        online_time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    )
+    return data
 
 
 # 访问控制
@@ -66,9 +78,10 @@ def login():
         data = form.data
         admin = Admin.query.filter_by(name=data["account"]).first()
         if not admin.check_pwd(data["pwd"]):
-            flash("密码错误!","err")
+            flash("密码错误!", "err")
             return redirect(url_for("admin.login"))
         session["admin"] = data["account"]
+        session["admin_id"] = admin.id
         return redirect(request.args.get("next") or url_for("admin.index"))
     return render_template("admin/login.html", form=form)
 
@@ -77,11 +90,12 @@ def login():
 @admin_login_req
 def logout():
     session.pop("admin", None)
+    session.pop("admin_id", None)
     return redirect(url_for("admin.login"))
 
 
 # 修改密码
-@admin.route("/pwd/",methods=["GET","POST"])
+@admin.route("/pwd/", methods=["GET", "POST"])
 @admin_login_req
 def pwd():
     form = PwdForm()
@@ -94,7 +108,7 @@ def pwd():
         db.session.commit()
         flash("修改密码成功,请重新登录!", "ok")
         redirect(url_for('admin.logout'))
-    return render_template("admin/pwd.html",form=form)
+    return render_template("admin/pwd.html", form=form)
 
 
 # 添加标签
@@ -114,6 +128,13 @@ def tag_add():
         db.session.add(tag)
         db.session.commit()
         flash("添加标签成功!", "ok")
+        oplog = Oplog(
+            admin_id=session["admin_id"],
+            ip=request.remote_addr,
+            reason="添加标签{}".format(data["name"])
+        )
+        db.session.add(oplog)
+        db.session.commit()
         redirect(url_for('admin.tag_add'))
     return render_template("admin/tag_add.html", form=form)
 
@@ -350,12 +371,12 @@ def preview_del(id=None):
 @admin.route("/user/list/<int:page>", methods=["GET"])
 @admin_login_req
 def user_list(page=None):
-    if page is None:
-        page = 1
-    page_data = User.query.order_by(
-        User.addtime.desc()
-    ).paginate(page=page, per_page=10)
-    return render_template("admin/user_list.html", page_data=page_data)
+        if page is None:
+            page = 1
+        page_data = User.query.order_by(
+            User.addtime.desc()
+        ).paginate(page=page, per_page=10)
+        return render_template("admin/user_list.html", page_data=page_data)
 
 
 # 查看用户
@@ -436,10 +457,19 @@ def moviecol_del(id=None):
     return redirect(url_for('admin.moviecol_list', page=1))
 
 
-@admin.route("/oplog/list")
+@admin.route("/oplog/list/<int:page>/", methods=["GET", "POST"])
 @admin_login_req
-def oplog_list():
-    return render_template("admin/oplog_list.html")
+def oplog_list(page=None):
+    if page is None:
+        page = 1
+    page_data = Oplog.query.join(
+        Admin
+    ).filter(
+        Admin.id == Oplog.admin_id,
+    ).order_by(
+        Oplog.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/oplog_list.html",page_data=page_data)
 
 
 @admin.route("/adminloginlog/list")
