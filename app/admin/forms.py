@@ -6,6 +6,7 @@ from wtforms import (
     FileField,
     TextAreaField,
     SelectField,
+    SelectMultipleField,
 )
 from wtforms.validators import (
     DataRequired,
@@ -14,10 +15,11 @@ from wtforms.validators import (
 from app.models import (
     Admin,
     Tag,
+    Auth,
 )
 
 tags = Tag.query.all()
-
+auths = Auth.query.all()
 
 class LoginForm(FlaskForm):
     """管理员登录表单"""
@@ -253,6 +255,7 @@ class PwdForm(FlaskForm):
         if not admin.check_pwd(pwd):
             raise ValidationError("旧密码输入错误!")
 
+
 class AuthForm(FlaskForm):
     name = StringField(
         label="权限名称",
@@ -282,3 +285,36 @@ class AuthForm(FlaskForm):
             "class": "btn btn-primary",
         }
     )
+
+
+class RoleForm(FlaskForm):
+    name = StringField(
+        label="角色名称",
+        validators=[
+            DataRequired("请输入角色名称！")
+        ],
+        description="角色名称",
+        render_kw={
+            "class": "form-control",
+            "placeholder": "请输入角色名称！"
+        }
+    )
+    auths = SelectMultipleField(
+        label="权限列表",
+        validators=[
+            DataRequired("请选择权限列表！")
+        ],
+        coerce=int,
+        choices=[(v.id, v.name) for v in Auth.query.all()],
+        description="权限列表",
+        render_kw={
+            "class": "form-control",
+        }
+    )
+    submit = SubmitField(
+        '编辑',
+        render_kw={
+            "class": "btn btn-primary",
+        }
+    )
+
