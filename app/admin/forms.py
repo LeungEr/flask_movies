@@ -11,15 +11,18 @@ from wtforms import (
 from wtforms.validators import (
     DataRequired,
     ValidationError,
+    EqualTo,
 )
 from app.models import (
     Admin,
     Tag,
     Auth,
+    Role,
 )
 
 tags = Tag.query.all()
 auths = Auth.query.all()
+
 
 class LoginForm(FlaskForm):
     """管理员登录表单"""
@@ -318,3 +321,53 @@ class RoleForm(FlaskForm):
         }
     )
 
+
+class AdminForm(FlaskForm):
+    name = StringField(
+        label="管理员名称",
+        validators=[
+            DataRequired("请输入管理员名称！")
+        ],
+        description="管理员名称",
+        render_kw={
+            "class": "form-control",
+            "placeholder": "请输入管理员名称！",
+        }
+    )
+    pwd = PasswordField(
+        label="管理员密码",
+        validators=[
+            DataRequired("请输入管理员密码！")
+        ],
+        description="管理员密码",
+        render_kw={
+            "class": "form-control",
+            "placeholder": "请输入管理员密码！",
+        }
+    )
+    repwd = PasswordField(
+        label="管理员重复密码",
+        validators=[
+            DataRequired("请输入管理员重复密码！"),
+            EqualTo('pwd', message="两次密码不一致！")
+        ],
+        description="管理员重复密码",
+        render_kw={
+            "class": "form-control",
+            "placeholder": "请输入管理员重复密码！",
+        }
+    )
+    role_id = SelectField(
+        label="所属角色",
+        coerce=int,
+        choices=[(v.id, v.name) for v in Role.query.all()],
+        render_kw={
+            "class": "form-control",
+        }
+    )
+    submit = SubmitField(
+        '添加',
+        render_kw={
+            "class": "btn btn-primary",
+        }
+    )

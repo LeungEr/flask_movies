@@ -15,6 +15,7 @@ from app.admin.forms import (
     PwdForm,
     AuthForm,
     RoleForm,
+    AdminForm,
 
 )
 from app.models import (
@@ -631,13 +632,30 @@ def auth_del(id=None):
     return redirect(url_for('admin.auth_list', page=1))
 
 
-@admin.route("/admin/add")
+@admin.route("/admin/add", methods=["GET", "POST"])
 @admin_login_req
 def admin_add():
-    return render_template("admin/admin_add.html")
+    form = AdminForm()
+    if form.validate_on_submit():
+        data = form.data
+        admin = Admin(
+            name=data["name"],
+            pwd=data["pwd"],
+            role_id=data["role_id"],
+        )
+        db.session.add(admin)
+        db.session.commit()
+        flash("添加管理员成功!", "ok")
+        redirect(url_for('admin.admin_add'))
+    return render_template("admin/admin_add.html", form=form)
 
 
-@admin.route("/admin/list")
+@admin.route("/admin/list/<int:page>", methods=["GET"])
 @admin_login_req
-def admin_list():
-    return render_template("admin/admin_list.html")
+def admin_list(page=None):
+    if page is None:
+        page = 1
+    page_data = Admin.query.order_by(
+        Admin.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/admin_list.html", page_data=page_data)
