@@ -82,6 +82,12 @@ def login():
             return redirect(url_for("admin.login"))
         session["admin"] = data["account"]
         session["admin_id"] = admin.id
+        adminlog = Adminlog(
+            admin_id=admin.id,
+            ip=request.remote_addr,
+        )
+        db.session.add(adminlog)
+        db.session.commit()
         return redirect(request.args.get("next") or url_for("admin.index"))
     return render_template("admin/login.html", form=form)
 
@@ -371,12 +377,12 @@ def preview_del(id=None):
 @admin.route("/user/list/<int:page>", methods=["GET"])
 @admin_login_req
 def user_list(page=None):
-        if page is None:
-            page = 1
-        page_data = User.query.order_by(
-            User.addtime.desc()
-        ).paginate(page=page, per_page=10)
-        return render_template("admin/user_list.html", page_data=page_data)
+    if page is None:
+        page = 1
+    page_data = User.query.order_by(
+        User.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/user_list.html", page_data=page_data)
 
 
 # 查看用户
@@ -457,7 +463,8 @@ def moviecol_del(id=None):
     return redirect(url_for('admin.moviecol_list', page=1))
 
 
-@admin.route("/oplog/list/<int:page>/", methods=["GET", "POST"])
+# 操作日志
+@admin.route("/oplog/list/<int:page>/", methods=["GET"])
 @admin_login_req
 def oplog_list(page=None):
     if page is None:
@@ -469,19 +476,37 @@ def oplog_list(page=None):
     ).order_by(
         Oplog.addtime.desc()
     ).paginate(page=page, per_page=10)
-    return render_template("admin/oplog_list.html",page_data=page_data)
+    return render_template("admin/oplog_list.html", page_data=page_data)
 
 
-@admin.route("/adminloginlog/list")
+@admin.route("/adminloginlog/list/<int:page>", methods=["GET"])
 @admin_login_req
-def adminloginlog_list():
-    return render_template("admin/adminloginlog_list.html")
+def adminloginlog_list(page=None):
+    if page is None:
+        page = 1
+    page_data = Adminlog.query.join(
+        Admin
+    ).filter(
+        Admin.id == Adminlog.admin_id,
+    ).order_by(
+        Adminlog.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/adminloginlog_list.html",page_data=page_data)
 
 
-@admin.route("/userloginlog/list")
+@admin.route("/userloginlog/list/<int:page>",methods=["GET"])
 @admin_login_req
-def userloginlog_list():
-    return render_template("admin/userloginlog_list.html")
+def userloginlog_list(page=None):
+    if page is None:
+        page = 1
+    page_data = Userlog.query.join(
+        User
+    ).filter(
+        User.id == Userlog.user_id,
+    ).order_by(
+        Userlog.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/userloginlog_list.html",page_data=page_data)
 
 
 @admin.route("/role/add")
