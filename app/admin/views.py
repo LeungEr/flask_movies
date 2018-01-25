@@ -13,6 +13,8 @@ from app.admin.forms import (
     MovieForm,
     PreviewForm,
     PwdForm,
+    AuthForm,
+
 )
 from app.models import (
     Admin,
@@ -25,6 +27,8 @@ from app.models import (
     Oplog,
     Adminlog,
     Userlog,
+    Auth,
+
 )
 from functools import wraps
 from app import (
@@ -491,10 +495,10 @@ def adminloginlog_list(page=None):
     ).order_by(
         Adminlog.addtime.desc()
     ).paginate(page=page, per_page=10)
-    return render_template("admin/adminloginlog_list.html",page_data=page_data)
+    return render_template("admin/adminloginlog_list.html", page_data=page_data)
 
 
-@admin.route("/userloginlog/list/<int:page>",methods=["GET"])
+@admin.route("/userloginlog/list/<int:page>", methods=["GET"])
 @admin_login_req
 def userloginlog_list(page=None):
     if page is None:
@@ -506,7 +510,7 @@ def userloginlog_list(page=None):
     ).order_by(
         Userlog.addtime.desc()
     ).paginate(page=page, per_page=10)
-    return render_template("admin/userloginlog_list.html",page_data=page_data)
+    return render_template("admin/userloginlog_list.html", page_data=page_data)
 
 
 @admin.route("/role/add")
@@ -521,16 +525,61 @@ def role_list():
     return render_template("admin/role_list.html")
 
 
-@admin.route("/auth/add")
+# 添加权限
+@admin.route("/auth/add/", methods=["GET", "POST"])
 @admin_login_req
 def auth_add():
-    return render_template("admin/auth_add.html")
+    form = AuthForm()
+    if form.validate_on_submit():
+        data = form.data
+        auth = Auth(
+            name=data["name"],
+            url=data["url"]
+        )
+        db.session.add(auth)
+        db.session.commit()
+        flash("添加权限成功！", "ok")
+    return render_template("admin/auth_add.html", form=form)
 
 
-@admin.route("/auth/list")
+# 权限列表
+@admin.route("/auth/list/<int:page>", methods=["GET"])
 @admin_login_req
-def auth_list():
-    return render_template("admin/auth_list.html")
+def auth_list(page=None):
+    if page is None:
+        page = 1
+    page_data = Auth.query.order_by(
+        Auth.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("admin/auth_list.html", page_data=page_data)
+
+
+# 编辑权限
+@admin.route("/auth/edit/<int:id>", methods=["GET", "POST"])
+@admin_login_req
+def auth_edit(id=None):
+    form = AuthForm()
+    auth = Auth.query.get_or_404(id)
+    if form.validate_on_submit():
+        data = form.data
+        auth.url = data["url"]
+        auth.name = data["name"]
+        db.session.add(auth)
+        db.session.commit()
+        flash("修改权限成功!", "ok")
+        redirect(url_for('admin.auth_edit', id=id))
+    return render_template("admin/auth_edit.html", form=form, auth=auth, page=1)
+
+
+# 删除权限
+@admin.route("/auth/del/<int:id>/", methods=["GET"])
+@admin_login_req
+def auth_del(id=None):
+    auth = Auth.query.get_or_404(int(id))
+    db.session.delete(auth)
+    db.session.commit()
+    flash("删除权限成功!", "ok")
+    return redirect(url_for('admin.auth_list', page=1))
 
 
 @admin.route("/admin/add")
