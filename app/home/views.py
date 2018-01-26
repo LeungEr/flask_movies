@@ -11,6 +11,7 @@ from app.home.forms import (
     RegisterForm,
     LoginForm,
     UserdetailForm,
+    PwdForm,
 )
 from app.models import (
     User,
@@ -140,10 +141,21 @@ def user():
     return render_template("home/user.html", form=form, user=user)
 
 
-@home.route("/pwd/")
+# 修改用户密码
+@home.route("/pwd/", methods=["GET", "POST"])
 @user_login_req
 def pwd():
-    return render_template("home/pwd.html")
+    form = PwdForm()
+    if form.validate_on_submit():
+        data = form.data
+        user = User.query.filter_by(name=session["user"]).first()
+        from werkzeug.security import generate_password_hash
+        user.pwd = generate_password_hash(data["new_pwd"])
+        db.session.add(user)
+        db.session.commit()
+        flash("修改密码成功,请重新登录!", "ok")
+        redirect(url_for('home.logout'))
+    return render_template("home/pwd.html", form=form)
 
 
 @home.route("/comments/")
