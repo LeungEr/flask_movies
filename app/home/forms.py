@@ -99,3 +99,40 @@ class RegisterForm(FlaskForm):
         user = User.query.filter_by(phone=phone).count()
         if user == 1:
             raise ValidationError("手机号已经存在！")
+
+
+class LoginForm(FlaskForm):
+    name = StringField(
+        label="账号",
+        validators=[
+            DataRequired("账号")
+        ],
+        description="账号",
+        render_kw={
+            "class": "form-control input-lg",
+            "placeholder": "账号",
+        }
+    )
+    pwd = PasswordField(
+        label="密码",
+        validators=[
+            DataRequired("密码！")
+        ],
+        description="密码",
+        render_kw={
+            "class": "form-control input-lg",
+            "placeholder": "密码",
+        }
+    )
+    submit = SubmitField(
+        '登录',
+        render_kw={
+            "class": "btn btn-lg btn-primary btn-block",
+        }
+    )
+
+    def validate_name(self, field):
+        name = field.data
+        user = User.query.filter_by(name=name).count()
+        if user == 0:
+            raise ValidationError("账号不存在!")
