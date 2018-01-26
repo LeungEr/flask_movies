@@ -3,6 +3,8 @@ from wtforms import (
     StringField,
     PasswordField,
     SubmitField,
+    TextAreaField,
+    FileField,
 )
 from wtforms.validators import (
     DataRequired,
@@ -136,3 +138,67 @@ class LoginForm(FlaskForm):
         user = User.query.filter_by(name=name).count()
         if user == 0:
             raise ValidationError("账号不存在!")
+
+
+class UserdetailForm(FlaskForm):
+    name = StringField(
+        label="昵称",
+        validators=[
+            DataRequired("昵称")
+        ],
+        description="昵称",
+        render_kw={
+            "class": "form-control input-lg",
+            "placeholder": "昵称",
+        }
+    )
+    email = StringField(
+        label="邮箱",
+        validators=[
+            DataRequired("邮箱"),
+            Email("邮箱格式不正确")
+        ],
+        description="邮箱",
+        render_kw={
+            "class": "form-control input-lg",
+            "placeholder": "邮箱",
+        }
+    )
+    phone = StringField(
+        label="手机号码",
+        validators=[
+            DataRequired("手机号码"),
+            Regexp("1[34578]\\d{9}", message="手机格式不正确!")
+        ],
+        description="手机号码",
+        render_kw={
+            "class": "form-control input-lg",
+            "placeholder": "手机号码",
+        }
+    )
+    face = FileField(
+        label="头像",
+        validators=[
+            DataRequired("请上传头像！")
+        ],
+        description="头像",
+    )
+    info = TextAreaField(
+        label="简介",
+        validators=[
+            DataRequired("请输入简介！")
+        ],
+        description="简介",
+        render_kw={
+            "class": "form-control",
+            "rows": 10
+        }
+    )
+    submit = SubmitField(
+        '保存修改',
+        render_kw={
+            "class": "btn btn-success",
+        }
+    )
+
+
