@@ -6,6 +6,7 @@ from flask import (
     flash,
     session,
     request,
+    abort,
 )
 from app.admin.forms import (
     LoginForm,
@@ -52,12 +53,34 @@ def tpl_extra():
     return data
 
 
-# 访问控制
+# 登录装饰器
 def admin_login_req(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if "admin" not in session:
             return redirect(url_for("admin.login", next=request.url))
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+# 权限控制装饰器
+def admin_auth(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        admin = Admin.query.join(
+            Role
+        ).filter(
+            Role.id == Admin.role_id,
+            Admin.id == session["admin_id"]
+        ).first()
+        auths = admin.role.auths
+        auths = list(map(lambda v: int(v), auths.split(",")))
+        auth_list = Auth.query.all()
+        urls = [v.url for v in auth_list for val in auths if val == v.id]
+        rule = request.url_rule
+        if str(rule) not in urls:
+            abort(404)
         return f(*args, **kwargs)
 
     return decorated_function
@@ -73,10 +96,12 @@ def change_filename(filename):
 
 @admin.route("/")
 @admin_login_req
+# @admin_auth
 def index():
     return render_template("admin/index.html")
 
 
+# 登录
 @admin.route("/login/", methods=["GET", "POST"])
 def login():
     form = LoginForm()
@@ -126,6 +151,7 @@ def pwd():
 # 添加标签
 @admin.route("/tag/add", methods=["GET", "POST"])
 @admin_login_req
+# @admin_auth
 def tag_add():
     form = TagForm()
     if form.validate_on_submit():
@@ -154,6 +180,7 @@ def tag_add():
 # 编辑标签
 @admin.route("/tag/edit/<int:id>", methods=["GET", "POST"])
 @admin_login_req
+# @admin_auth
 def tag_edit(id=None):
     form = TagForm()
     tag = Tag.query.get_or_404(id)
@@ -174,6 +201,7 @@ def tag_edit(id=None):
 # 标签删除
 @admin.route("/tag/del/<int:id>/", methods=["GET"])
 @admin_login_req
+# @admin_auth
 def tag_del(id=None):
     tag = Tag.query.filter_by(id=id).first_or_404()
     db.session.delete(tag)
@@ -185,6 +213,7 @@ def tag_del(id=None):
 # 标签列表
 @admin.route("/tag/list/<int:page>/", methods=["GET"])
 @admin_login_req
+# @admin_auth
 def tag_list(page=None):
     if page is None:
         page = 1
@@ -584,7 +613,7 @@ def auth_add():
         data = form.data
         auth = Auth(
             name=data["name"],
-            url=data["url"]
+            url=data["url"],
         )
         db.session.add(auth)
         db.session.commit()
@@ -632,21 +661,24 @@ def auth_del(id=None):
     return redirect(url_for('admin.auth_list', page=1))
 
 
-@admin.route("/admin/add", methods=["GET", "POST"])
+# 添加管理员
+@admin.route("/admin/add/", methods=["GET", "POST"])
 @admin_login_req
+# @admin_auth
 def admin_add():
     form = AdminForm()
+    from werkzeug.security import generate_password_hash
     if form.validate_on_submit():
         data = form.data
         admin = Admin(
             name=data["name"],
-            pwd=data["pwd"],
+            pwd=generate_password_hash(data["pwd"]),
             role_id=data["role_id"],
+            is_super=1
         )
         db.session.add(admin)
         db.session.commit()
-        flash("添加管理员成功!", "ok")
-        redirect(url_for('admin.admin_add'))
+        flash("添加管理员成功！", "ok")
     return render_template("admin/admin_add.html", form=form)
 
 
