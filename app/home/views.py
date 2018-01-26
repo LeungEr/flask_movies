@@ -16,6 +16,7 @@ from app.home.forms import (
 from app.models import (
     User,
     Userlog,
+    Preview,
 )
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
@@ -171,7 +172,7 @@ def loginlog(page=None):
     if page is None:
         page = 1
     page_data = Userlog.query.filter_by(
-        user_id = int(session["user_id"])
+        user_id=int(session["user_id"])
     ).order_by(
         Userlog.addtime.desc()
     ).paginate(page=page, per_page=10)
@@ -189,9 +190,11 @@ def index():
     return render_template("home/index.html")
 
 
+# 上映预告
 @home.route("/animation/")
 def animation():
-    return render_template("home/animation.html")
+    data = Preview.query.all()
+    return render_template("home/animation.html", data=data)
 
 
 @home.route("/search/")
