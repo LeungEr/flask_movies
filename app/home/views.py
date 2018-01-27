@@ -173,11 +173,11 @@ def comments():
 def loginlog(page=None):
     if page is None:
         page = 1
-    page_data = Userlog.query.filter_by(
-        user_id=int(session["user_id"])
-    ).order_by(
-        Userlog.addtime.desc()
-    ).paginate(page=page, per_page=10)
+        page_data = Userlog.query.filter_by(
+            user_id=int(session["user_id"])
+        ).order_by(
+            Userlog.addtime.desc()
+        ).paginate(page=page, per_page=10)
     return render_template("home/loginlog.html", page_data=page_data)
 
 
@@ -254,9 +254,23 @@ def animation():
     return render_template("home/animation.html", data=data)
 
 
-@home.route("/search/")
-def search():
-    return render_template("home/search.html")
+# 搜索
+@home.route("/search/<int:page>")
+def search(page=None):
+    if page is None:
+        page = 1
+    key = request.args.get("key", "")
+    movie_count = Movie.query.filter(
+        Movie.title.ilike('%' + key + '%')
+    ).count()
+    # 分页
+    page_data = Movie.query.filter(
+        # 模糊匹配
+        Movie.title.ilike('%' + key + '%')
+    ).order_by(
+        Movie.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("home/search.html", movie_count=movie_count, key=key, page_data=page_data)
 
 
 @home.route("/play/")
