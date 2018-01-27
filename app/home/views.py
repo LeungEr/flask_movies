@@ -12,6 +12,7 @@ from app.home.forms import (
     LoginForm,
     UserdetailForm,
     PwdForm,
+    CommentForm,
 )
 from app.models import (
     User,
@@ -19,6 +20,7 @@ from app.models import (
     Preview,
     Tag,
     Movie,
+    Comment,
 )
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
@@ -94,7 +96,7 @@ def register():
         db.session.add(user)
         db.session.commit()
         flash("注册成功!", "ok")
-    return render_template("home/login.html", form=form)
+    return render_template("home/register.html", form=form)
 
 
 # 会员修改资料
@@ -161,10 +163,22 @@ def pwd():
     return render_template("home/pwd.html", form=form)
 
 
-@home.route("/comments/")
+@home.route("/comments/<int:page>/")
 @user_login_req
-def comments():
-    return render_template("home/comments.html")
+def comments(page=None):
+    if page is None:
+        page = 1
+    page_data = Comment.query.join(
+        Movie
+    ).join(
+        User
+    ).filter(
+        Movie.id == Comment.movie_id,
+        User.id == session["user_id"]
+    ).order_by(
+        Comment.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("home/comments.html", page_data=page_data)
 
 
 # 会员登录日志
@@ -273,10 +287,40 @@ def search(page=None):
     return render_template("home/search.html", movie_count=movie_count, key=key, page_data=page_data)
 
 
-@home.route("/play/<int:id>/")
-def play(id=None):
+@home.route("/play/<int:id>/<int:page>/", methods=["GET", "POST"])
+def play(id=None,page=None):
     movie = Movie.query.join(Tag).filter(
         Tag.id == Movie.tag_id,
         Movie.id == int(id)
     ).first_or_404()
-    return render_template("home/play.html",movie=movie)
+
+    if page is None:
+        page = 1
+    page_data = Comment.query.join(
+        Movie
+    ).join(
+        User
+    ).filter(
+        Movie.id == movie.id,
+        User.id == Comment.user_id
+    ).order_by(
+        Comment.addtime.desc()
+    ).paginate(page=page, per_page=10)
+
+    movie.playnum = movie.playnum + 1
+    form = CommentForm()
+    if "user" in session and form.validate_on_submit():
+        data = form.data
+        comment = Comment(
+            content=data["content"],
+            movie_id=movie.id,
+            user_id=session["user_id"]
+        )
+        db.session.add(comment)
+        db.session.commit()
+        movie.commentnum = movie.commentnum + 1
+        db.session.add(movie)
+        db.session.commit()
+        flash("添加评论成功!", "ok")
+        return redirect(url_for('home.play', id=movie.id,page=1))
+    return render_template("home/play.html", movie=movie, form=form,page_data=page_data)
