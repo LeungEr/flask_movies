@@ -273,6 +273,10 @@ def search(page=None):
     return render_template("home/search.html", movie_count=movie_count, key=key, page_data=page_data)
 
 
-@home.route("/play/")
-def play():
-    return render_template("home/play.html")
+@home.route("/play/<int:id>/")
+def play(id=None):
+    movie = Movie.query.join(Tag).filter(
+        Tag.id == Movie.tag_id,
+        Movie.id == int(id)
+    ).first_or_404()
+    return render_template("home/play.html",movie=movie)
