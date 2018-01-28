@@ -324,6 +324,7 @@ def search(page=None):
     ).order_by(
         Movie.addtime.desc()
     ).paginate(page=page, per_page=10)
+    page_data.key = key
     return render_template("home/search.html", movie_count=movie_count, key=key, page_data=page_data)
 
 
