@@ -21,6 +21,7 @@ from app.models import (
     Tag,
     Movie,
     Comment,
+    Moviecol,
 )
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
@@ -195,10 +196,49 @@ def loginlog(page=None):
     return render_template("home/loginlog.html", page_data=page_data)
 
 
-@home.route("/moviecol/")
+# 添加电影收藏
+@home.route("/moviecol/add/",methods=["GET"])
 @user_login_req
-def moviecol():
-    return render_template("home/moviecol.html")
+def moviecol_add():
+    uid = request.args.get("uid","")
+    mid = request.args.get("mid","")
+    moviecol = Moviecol.query.filter_by(
+        user_id = int(uid),
+        movie_id = int(mid),
+    ).count()
+    if moviecol == 1:
+        # 已经收藏
+        data = dict(ok=0)
+    if moviecol == 0:
+        # 还没收藏
+        moviecol = Moviecol(
+            user_id = int(uid),
+            movie_id = int(mid),
+        )
+        db.session.add(moviecol)
+        db.session.commit()
+        data = dict(ok=1)
+    import json
+    return json.dumps(data)
+
+
+# 电影收藏
+@home.route("/moviecol/<int:page>/")
+@user_login_req
+def moviecol(page=None):
+    if page is None:
+        page = 1
+    page_data = Moviecol.query.join(
+        Movie
+    ).join(
+        User
+    ).filter(
+        Movie.id == Moviecol.movie_id,
+        User.id == session["user_id"]
+    ).order_by(
+        Moviecol.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template("home/moviecol.html",page_data=page_data)
 
 
 # 首页
@@ -288,7 +328,7 @@ def search(page=None):
 
 
 @home.route("/play/<int:id>/<int:page>/", methods=["GET", "POST"])
-def play(id=None,page=None):
+def play(id=None, page=None):
     movie = Movie.query.join(Tag).filter(
         Tag.id == Movie.tag_id,
         Movie.id == int(id)
@@ -322,5 +362,5 @@ def play(id=None,page=None):
         db.session.add(movie)
         db.session.commit()
         flash("添加评论成功!", "ok")
-        return redirect(url_for('home.play', id=movie.id,page=1))
-    return render_template("home/play.html", movie=movie, form=form,page_data=page_data)
+        return redirect(url_for('home.play', id=movie.id, page=1))
+    return render_template("home/play.html", movie=movie, form=form, page_data=page_data)
