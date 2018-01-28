@@ -197,14 +197,14 @@ def loginlog(page=None):
 
 
 # 添加电影收藏
-@home.route("/moviecol/add/",methods=["GET"])
+@home.route("/moviecol/add/", methods=["GET"])
 @user_login_req
 def moviecol_add():
-    uid = request.args.get("uid","")
-    mid = request.args.get("mid","")
+    uid = request.args.get("uid", "")
+    mid = request.args.get("mid", "")
     moviecol = Moviecol.query.filter_by(
-        user_id = int(uid),
-        movie_id = int(mid),
+        user_id=int(uid),
+        movie_id=int(mid),
     ).count()
     if moviecol == 1:
         # 已经收藏
@@ -212,8 +212,8 @@ def moviecol_add():
     if moviecol == 0:
         # 还没收藏
         moviecol = Moviecol(
-            user_id = int(uid),
-            movie_id = int(mid),
+            user_id=int(uid),
+            movie_id=int(mid),
         )
         db.session.add(moviecol)
         db.session.commit()
@@ -238,7 +238,7 @@ def moviecol(page=None):
     ).order_by(
         Moviecol.addtime.desc()
     ).paginate(page=page, per_page=10)
-    return render_template("home/moviecol.html",page_data=page_data)
+    return render_template("home/moviecol.html", page_data=page_data)
 
 
 # 首页
