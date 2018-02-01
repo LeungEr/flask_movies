@@ -14,15 +14,15 @@ from app.home.forms import (
     PwdForm,
     CommentForm,
 )
-from app.models import (
-    User,
-    Userlog,
+from app.models.user import User
+from app.models.log import Userlog
+from app.models.movie import(
     Preview,
-    Tag,
     Movie,
     Comment,
     Moviecol,
 )
+from app.models.admin import Tag
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 import uuid
@@ -188,11 +188,11 @@ def comments(page=None):
 def loginlog(page=None):
     if page is None:
         page = 1
-        page_data = Userlog.query.filter_by(
-            user_id=int(session["user_id"])
-        ).order_by(
-            Userlog.addtime.desc()
-        ).paginate(page=page, per_page=10)
+    page_data = Userlog.query.filter_by(
+        user_id=int(session["user_id"])
+    ).order_by(
+        Userlog.addtime.desc()
+    ).paginate(page=page, per_page=10)
     return render_template("home/loginlog.html", page_data=page_data)
 
 

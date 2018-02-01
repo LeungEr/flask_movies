@@ -13,7 +13,7 @@ from wtforms.validators import (
     Regexp,
     ValidationError,
 )
-from app.models import (
+from app.models.user import (
     User,
 )
 

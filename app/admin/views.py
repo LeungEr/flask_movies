@@ -19,19 +19,23 @@ from app.admin.forms import (
     AdminForm,
 
 )
-from app.models import (
+from app.models.user import User
+from app.models.admin import(
     Admin,
+    Auth,
+    Role,
     Tag,
+)
+from app.models.movie import(
     Movie,
     Preview,
-    User,
     Comment,
     Moviecol,
+)
+from app.models.log import(
     Oplog,
     Adminlog,
     Userlog,
-    Auth,
-    Role,
 )
 from functools import wraps
 from app import (

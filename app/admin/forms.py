@@ -13,7 +13,7 @@ from wtforms.validators import (
     ValidationError,
     EqualTo,
 )
-from app.models import (
+from app.models.admin import (
     Admin,
     Tag,
     Auth,
