@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 
 import sys
 from os.path import abspath
@@ -16,12 +16,3 @@ import app
 # 这是规定的套路(协议)
 application = app.app
 
-# 这是把代码部署到 apache gunicorn nginx 后面的套路
-"""
-➜  ~ cat /etc/supervisor/conf.d/xx.conf
-
-[program:todo]
-command=/usr/local/bin/gunicorn wsgi --bind 0.0.0.0:2000 --pid /tmp/todo.pid
-directory=/root/web13
-autostart=true
-"""
