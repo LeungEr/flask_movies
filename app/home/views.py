@@ -23,6 +23,7 @@ from app.models.movie import(
     Moviecol,
 )
 from app.models.admin import Tag
+
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 import uuid
